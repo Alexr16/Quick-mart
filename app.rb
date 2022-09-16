@@ -13,7 +13,7 @@ class App
     @inventory = load_inventory # array of items
     @cart = [] # array of items
     @member = ''
-    @transaction_number = 1
+    @transaction_number = load_transaction_number
   end
 
   def select_costumer_status
@@ -117,9 +117,9 @@ class App
   end
 
   def view_cart
-    puts "ITEM       -      QUANTITY      -      UNIT PRICE      -      TOTAL"
+    puts "ITEM#{" "*8}QUANTITY#{" "*8}UNIT PRICE#{" "*8}TOTAL"
     @cart.each do |item|
-      puts "#{item.name}       -      #{item.quantity}      -      $#{sprintf('%.2f',item.unit_price)}     -      $#{sprintf('%.2f',item.unit_price * item.quantity)}"
+      puts "#{item.name}#{" "*10}#{item.quantity}#{" "*12}$#{sprintf('%.2f',item.unit_price)}#{" "*12}$#{sprintf('%.2f',item.unit_price * item.quantity)}"
     end
     puts 'TOTAL NUMBER OF ITEMS: ' + tota_number_of_items().to_s
     puts "SUB-TOTAL: $#{sprintf('%.2f',sub_total)}"
@@ -181,9 +181,9 @@ class App
     recipe = File.new("transaction_#{sprintf('%06d',@transaction_number)}_#{@date.strftime('%d%m%Y')}.txt", 'w')
     recipe.puts @date.strftime('%B %d, %Y')
     recipe.puts "TRANSACTION: #{sprintf('%06d',@transaction_number)}"
-    recipe.puts "ITEM             QUANTITY            UNIT PRICE            TOTAL"
+    recipe.puts "ITEM#{" "*8}QUANTITY#{" "*8}UNIT PRICE#{" "*8}TOTAL"
     @cart.each do |item|
-        recipe.puts "#{item.name}             #{item.quantity}            $#{sprintf('%.2f',item.unit_price)}            $#{sprintf('%.2f',item.unit_price * item.quantity)}"
+        recipe.puts "#{item.name}#{" "*10}#{item.quantity}#{" "*12}$#{sprintf('%.2f',item.unit_price)}#{" "*12}$#{sprintf('%.2f',item.unit_price * item.quantity)}"
     end
     recipe.puts '************************************'
     recipe.puts "TOTAL NUMBER OF ITEMS: #{tota_number_of_items()}"
@@ -197,8 +197,8 @@ class App
     update_inventory()
     @cart = []
     @transaction_number += 1
+    update_transaction_number()
     recipe.close
-    # exit
   end
 
   def update_inventory
@@ -213,6 +213,12 @@ class App
         @inventory.each do |item|
             file.puts "#{item.name}: #{item.quantity}, $#{sprintf('%.2f',item.regular_price)}, $#{sprintf('%.2f',item.member_price)}, #{item.tax_status}"
         end
+    end
+  end
+
+  def update_transaction_number
+    File.open('./data/transaction_number.txt', 'w') do |file|
+        file.puts @transaction_number
     end
   end
 

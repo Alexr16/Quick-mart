@@ -24,4 +24,9 @@ module Load
       end
     end
   end
+
+  def load_transaction_number
+    file = File.readlines('./data/transaction_number.txt')
+    file[0].to_i
+  end
 end
