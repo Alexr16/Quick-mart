@@ -2,10 +2,12 @@ require_relative 'classes/item'
 require_relative 'classes/member'
 require_relative 'classes/cart'
 require_relative 'modules/load'
+require_relative 'modules/validations'
 require 'date'
 
 class App # rubocop:disable all
   include Load
+  include Validation
 
   attr_accessor :inventory, :cart, :member, :transaction_number
 
@@ -21,10 +23,7 @@ class App # rubocop:disable all
     puts '1. Reward Member'
     puts '2. Regular Member'
     status = gets.chomp
-    while status != '1' && status != '2'
-      puts 'Please enter a valid option: '
-      status = gets.chomp
-    end
+    status = validate_option(status, 'main_menu')
     case status.to_i
     when 1
       status = 'Reward Member'
@@ -40,10 +39,7 @@ class App # rubocop:disable all
     puts '1. Choose item from list'
     puts '2. Add item with name'
     option = gets.chomp
-    while option != '1' && option != '2'
-      puts 'Please enter a valid option: '
-      option = gets.chomp
-    end
+    option = validate_option(option, 'main_menu')
     case option.to_i
     when 1
       puts 'Select an item to add to cart: '
@@ -51,20 +47,10 @@ class App # rubocop:disable all
         puts "#{index}. #{item.name}" if item.quantity.positive?
       end
       item = gets.chomp.to_i
-      while item.negative? || item > @inventory.length - 1 || @inventory[item].quantity.zero?
-        puts 'Please enter a valid option: ' if item.negative? || item > @inventory.length - 1
-        puts 'Item is out of stock' if @inventory[item]&.quantity&.zero?
-        puts 'Select an item: '
-        item = gets.chomp.to_i
-      end
+      item = validate_item_selection(item, @inventory)
       puts 'Enter item quantity: '
       quantity = gets.chomp.to_i
-      while quantity > @inventory[item].quantity || quantity <= 0
-        puts 'Not enough items in stock' if quantity > @inventory[item].quantity
-        puts 'Please enter a valid quantity' if quantity <= 0
-        puts 'Enter item quantity: '
-        quantity = gets.chomp.to_i
-      end
+      quantity = validate_item_quantity(quantity, @inventory[item])
       unit_price = unit_price(@inventory[item])
       item_to_cart = Cart.new(@inventory[item], quantity, unit_price)
       @cart << item_to_cart
@@ -73,21 +59,10 @@ class App # rubocop:disable all
       puts 'Enter item name: '
       name = gets.chomp
       item = @inventory.find { |object| object.name == name }
-      while !item || item.quantity.zero?
-        puts 'Item not found' unless item
-        puts 'Item is out of stock' if item&.quantity&.zero?
-        puts 'Enter item name: '
-        name = gets.chomp
-        item = @inventory.find { |object| object.name == name }
-      end
+      item = validate_item_name(item, @inventory)
       puts 'Enter item quantity: '
       quantity = gets.chomp.to_i
-      while quantity > item.quantity || quantity <= 0
-        puts 'Not enough items in stock' if quantity > item.quantity
-        puts 'Please enter a valid quantity' if quantity <= 0
-        puts 'Enter item quantity: '
-        quantity = gets.chomp.to_i
-      end
+      quantity = validate_item_quantity(quantity, item)
       unit_price = unit_price(item)
       item_to_cart = Cart.new(item, quantity, unit_price)
       @cart << item_to_cart
@@ -99,18 +74,16 @@ class App # rubocop:disable all
     puts '1. Remove individual item'
     puts '2. Remove all items'
     option = gets.chomp
-    while option != '1' && option != '2'
-      puts 'Please enter a valid option: '
-      option = gets.chomp
-    end
+    option = validate_option(option, 'main_menu')
     case option.to_i
     when 1
       puts 'Select an item to remove from cart: '
       @cart.each_with_index do |item, index|
         puts "#{index}. #{item.name}"
       end
-      item = gets.chomp
-      @cart.delete_at(item.to_i)
+      item = gets.chomp.to_i
+      item = validation_remove_item(item, @cart)
+      @cart.delete_at(item)
     when 2
       @cart = []
     end
@@ -172,11 +145,7 @@ class App # rubocop:disable all
     puts "TOTAL: $#{format('%.2f', total_price)}"
     puts 'CASH: '
     cash = gets.chomp.to_f
-    while cash < total_price
-      puts 'Not enough cash'
-      puts 'CASH: '
-      cash = gets.chomp.to_f
-    end
+    cash = validate_cash(cash, total_price)
     puts "CHANGE: $#{format('%.2f', cash - total_price)}"
     recipe = File.new("transaction_#{format('%06d', @transaction_number)}_#{@date.strftime('%d%m%Y')}.txt", 'w')
     recipe.puts @date.strftime('%B %d, %Y')

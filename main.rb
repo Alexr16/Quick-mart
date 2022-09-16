@@ -1,7 +1,9 @@
 require_relative 'classes/item'
 require_relative 'app'
+require_relative 'modules/validations'
 
 class Main
+  include Validation
   def initialize
     @finished = false
     @checkout = false
@@ -17,11 +19,7 @@ class Main
   end
 
   def choose(choice) # rubocop:disable all
-    while choice != '1' && choice != '2'
-      puts 'Please enter a valid option: '
-      choice = gets.chomp
-    end
-
+    choice = validate_option(choice, 'main_menu')
     case choice.to_i
     when 1
       @checkout = false
@@ -34,21 +32,23 @@ class Main
         4 - Checkout and Print Receipt
         5 - Cancel transaction'
         option = gets.chomp
-        while option != '1' && option != '2' && option != '3' && option != '4' && option != '5'
-          puts 'Please enter a valid option: '
-          option = gets.chomp
-        end
+        option = validate_option(option, 'menu')
         case option.to_i
         when 1
           @app.add_items_to_cart
         when 2
-          @app.remove_item_from_cart
+          @app.remove_item_from_cart if @app.cart.length.positive? # rubocop:disable all
+          puts 'Cart is empty' if @app.cart.length.zero? # rubocop:disable all
         when 3
           @app.view_cart
         when 4
-          @app.checkout
-          puts 'Transaction successful!'
-          @checkout = true
+          if @app.cart.length.positive? # rubocop:disable all
+            @app.checkout
+            puts 'Transaction successful!'
+            @checkout = true
+          elsif @app.cart.length.zero? # rubocop:disable all
+            puts 'Cart is empty'
+          end
         when 5
           puts 'Transaction cancelled'
           @app.cancel_transaction
