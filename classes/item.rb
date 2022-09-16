@@ -3,7 +3,7 @@ require 'securerandom'
 class Item
   attr_accessor :name, :quantity, :regular_price, :member_price, :tax_status, :inventory
 
-  @@inventory = []
+  @@inventory = [] # rubocop:disable Style/ClassVars
 
   def self.inventory
     @@inventory

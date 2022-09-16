@@ -16,17 +16,17 @@ class Main
     gets.chomp
   end
 
-  def choose(choice)
+  def choose(choice) # rubocop:disable all
     while choice != '1' && choice != '2'
       puts 'Please enter a valid option: '
       choice = gets.chomp
     end
 
-      case choice.to_i
-      when 1
-        @checkout = false
-        @app.select_costumer_status
-        until @checkout
+    case choice.to_i
+    when 1
+      @checkout = false
+      @app.select_costumer_status
+      until @checkout
         puts 'Select an option:
         1 - Add item to cart
         2 - Remove item from cart
@@ -54,10 +54,10 @@ class Main
           @app.cancel_transaction
           @checkout = true
         end
-        end
-      when 2
-        @finished = true
       end
+    when 2
+      @finished = true
+    end
   end
 
   def run
